@@ -57,6 +57,7 @@ flask_secure_login/
 ├── requirements.txt
 └── templates/
     ├── login.html
+    ├── home.html
     └── register.html
 ```
 
@@ -71,84 +72,77 @@ MYSQL_DB=secure_login
 
 ## APP.PY
 ```python
-from flask import Flask, render_template, request, redirect, session, flash
-from flask_mysqldb import MySQL
-from werkzeug.security import generate_password_hash, check_password_hash
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 
 app = Flask(__name__)
+app.secret_key = "clave_super_segura_2026"
 
-app.secret_key = os.getenv("SECRET_KEY")
 
-app.config['MYSQL_HOST'] = os.getenv("MYSQL_HOST")
-app.config['MYSQL_USER'] = os.getenv("MYSQL_USER")
-app.config['MYSQL_PASSWORD'] = os.getenv("MYSQL_PASSWORD")
-app.config['MYSQL_DB'] = os.getenv("MYSQL_DB")
-
-mysql = MySQL(app)
-
-@app.route("/")
-def home():
-    return redirect("/login")
-
-@app.route("/register", methods=["GET","POST"])
-def register():
-    if request.method == "POST":
-        username = request.form["username"].strip()
-        email = request.form["email"].strip()
-        password = request.form["password"]
-
-        if len(username) < 3:
-            flash("Usuario inválido")
-            return redirect("/register")
-
-        password_hash = generate_password_hash(password)
-
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO usuarios(username,email,password_hash) VALUES(%s,%s,%s)", (username,email,password_hash))
-        mysql.connection.commit()
-        cur.close()
-
-        flash("Usuario registrado")
-        return redirect("/login")
-
-    return render_template("register.html")
-
-@app.route("/login", methods=["GET","POST"])
+# -----------------------
+# LOGIN
+# -----------------------
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM usuarios WHERE username=%s", (username,))
-        user = cur.fetchone()
-        cur.close()
-
-        if user:
-            if check_password_hash(user[3], password):
-                session["user"] = username
-                flash("Bienvenido")
-                return redirect("/dashboard")
-
-        flash("Credenciales incorrectas")
+        # 🔐 SIMULACIÓN DE USUARIO (luego lo conectas a MySQL)
+        if username == "admin" and password == "1234":
+            session["user"] = username
+            flash("Bienvenido al sistema", "success")
+            return redirect(url_for("home"))
+        else:
+            flash("Usuario o contraseña incorrectos", "danger")
 
     return render_template("login.html")
 
-@app.route("/dashboard")
-def dashboard():
-    if "user" not in session:
-        return redirect("/login")
-    return f"Bienvenido {session['user']}"
 
+# -----------------------
+# REGISTRO (simulado)
+# -----------------------
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        flash("Usuario registrado correctamente (simulado)", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
+
+
+# -----------------------
+# HOME (BIENVENIDA)
+# -----------------------
+@app.route("/home")
+def home():
+    if "user" not in session:
+        flash("Debes iniciar sesión primero", "warning")
+        return redirect(url_for("login"))
+
+    return render_template("home.html", user=session["user"])
+
+
+# -----------------------
+# LOGOUT
+# -----------------------
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/login")
+    flash("Sesión cerrada correctamente", "info")
+    return redirect(url_for("login"))
 
+
+# -----------------------
+# REDIRECCIÓN INICIAL
+# -----------------------
+@app.route("/")
+def index():
+    return redirect(url_for("login"))
+
+
+# -----------------------
+# MAIN
+# -----------------------
 if __name__ == "__main__":
     app.run(debug=True)
 ```
@@ -156,16 +150,125 @@ if __name__ == "__main__":
 ## LOGIN.HTML
 ```html
 <!DOCTYPE html>
-<html>
-<head><title>Login</title></head>
-<body>
-<h2>Login Seguro</h2>
-<form method="POST">
-<input type="text" name="username" placeholder="Usuario" required><br><br>
-<input type="password" name="password" placeholder="Password" required><br><br>
-<button type="submit">Ingresar</button>
-</form>
-<a href="/register">Registrarse</a>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body class="bg-light">
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+
+    <div class="card shadow-lg p-4" style="min-width: 350px; max-width: 400px; width: 100%; border-radius: 12px;">
+
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">Login Seguro</h3>
+            <p class="text-muted">Accede a tu sistema</p>
+        </div>
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <label class="form-label">Usuario</label>
+                <input type="text" name="username" class="form-control" placeholder="Ingresa tu usuario" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" name="password" class="form-control" placeholder="Ingresa tu contraseña" required>
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Ingresar
+                </button>
+            </div>
+
+        </form>
+
+        <div class="text-center">
+            <a href="/register" class="text-decoration-none">¿No tienes cuenta? Regístrate</a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+```
+## HOME.HTML
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body class="bg-light">
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+
+    <div class="card shadow-lg p-4" style="min-width: 350px; max-width: 450px; width: 100%; border-radius: 12px;">
+
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">Registro</h3>
+            <p class="text-muted">Crea tu cuenta para comenzar</p>
+        </div>
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <label class="form-label">Usuario</label>
+                <input type="text" name="username" class="form-control" placeholder="Ingresa tu usuario" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Correo</label>
+                <input type="email" name="email" class="form-control" placeholder="Ingresa tu correo">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" name="password" class="form-control" placeholder="Ingresa tu contraseña" required>
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-success btn-lg">
+                    Registrar
+                </button>
+            </div>
+
+        </form>
+
+        <div class="text-center">
+            <a href="/login" class="text-decoration-none">
+                ¿Ya tienes cuenta? Ir al login
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
 ```
@@ -173,17 +276,66 @@ if __name__ == "__main__":
 ## REGISTER.HTML
 ```html
 <!DOCTYPE html>
-<html>
-<head><title>Registro</title></head>
-<body>
-<h2>Registro</h2>
-<form method="POST">
-<input type="text" name="username" placeholder="Usuario" required><br><br>
-<input type="email" name="email" placeholder="Correo"><br><br>
-<input type="password" name="password" placeholder="Password" required><br><br>
-<button type="submit">Registrar</button>
-</form>
-<a href="/login">Ir al login</a>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body class="bg-light">
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+
+    <div class="card shadow-lg p-4" style="min-width: 350px; max-width: 450px; width: 100%; border-radius: 12px;">
+
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">Registro</h3>
+            <p class="text-muted">Crea tu cuenta para comenzar</p>
+        </div>
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <label class="form-label">Usuario</label>
+                <input type="text" name="username" class="form-control" placeholder="Ingresa tu usuario" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Correo</label>
+                <input type="email" name="email" class="form-control" placeholder="Ingresa tu correo">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" name="password" class="form-control" placeholder="Ingresa tu contraseña" required>
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-success btn-lg">
+                    Registrar
+                </button>
+            </div>
+
+        </form>
+
+        <div class="text-center">
+            <a href="/login" class="text-decoration-none">
+                ¿Ya tienes cuenta? Ir al login
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
 ```
