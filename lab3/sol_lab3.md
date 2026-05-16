@@ -37,12 +37,14 @@ python -m venv venv
 Set-ExecutionPolicy Unrestricted -Scope Process
 venv\Scripts\activate
 python -m pip install --upgrade pip
+```
 
 ## 🧪 0.3 Instalar librerias
 ```bash
 pip install flask
 pip install mysql-connector-python
 pip freeze > requirements.txt
+```
 
 ---
 
