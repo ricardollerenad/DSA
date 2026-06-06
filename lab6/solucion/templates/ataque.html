@@ -1,0 +1,78 @@
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario externo (CSRF Attack)</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            margin: auto;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: darkred;
+        }
+
+        h2 {
+            text-align: center;
+            color: darkred;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h2>⚠ Página Externa (Simulación CSRF)</h2>
+
+    <!--
+        Este formulario intenta enviar datos al servidor Flask
+        SIN incluir el token CSRF → será rechazado
+    -->
+
+    <form action="http://127.0.0.1:5000/" method="POST">
+
+        <label>Nombre (editable por atacante)</label>
+        <input type="text" name="nombre" value="Usuario Atacante">
+
+        <label>Correo (editable por atacante)</label>
+        <input type="text" name="correo" value="ataque@evil.com">
+
+        <!-- Botón manual (NO auto-submit) -->
+        <button type="submit">
+            Enviar ataque CSRF
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>
