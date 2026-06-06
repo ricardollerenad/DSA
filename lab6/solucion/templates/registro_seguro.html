@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Formulario CSRF</title>
+</head>
+
+<body>
+
+<h2>Formulario Seguro (CSRF habilitado)</h2>
+
+<form method="POST">
+
+    <!-- 🔐 ESTE ES EL TOKEN CSRF -->
+    <!-- Flask lo genera automáticamente -->
+    {{ form.hidden_tag() }}
+
+    <p>
+        {{ form.nombre.label }}<br>
+        {{ form.nombre() }}
+    </p>
+
+    <p>
+        {{ form.correo.label }}<br>
+        {{ form.correo() }}
+    </p>
+
+    <p>
+        {{ form.enviar() }}
+    </p>
+
+</form>
+
+</body>
+</html>
