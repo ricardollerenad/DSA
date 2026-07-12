@@ -95,7 +95,7 @@ server {
     listen 80;
     server_name localhost;
 
-    # Redirección al contenedor de la aplicación Flask
+    # Aplicación Flask
     location / {
         proxy_pass http://web:5000;
         proxy_set_header Host $host;
@@ -103,12 +103,16 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
-    # Redirección al contenedor de phpMyAdmin
+    # phpMyAdmin Corregido
     location /phpmyadmin/ {
-        proxy_pass http://myadmin:80/;
+        proxy_pass http://myadmin/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        # Estas 3 líneas evitan que phpMyAdmin rompa las rutas relativas al redirigir
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
     }
 }
 ```
