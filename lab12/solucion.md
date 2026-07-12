@@ -30,11 +30,16 @@ laboratorio12/
 ├── .gitignore             # Exclusión de credenciales para Git
 ├── Dockerfile             # Construcción de la imagen Flask
 └── docker-compose.yml     # Orquestador central de la infraestructura
-└── docker-compose.yml
+
 ```
 
 ## 🔐 2. Variables de Entorno y Configuración Base
-1. .env
+### 1. Creacion del archivo .env
+
+```bash
+cd laboratorio12
+nano .env
+```
 
 Crea este archivo en la raíz para centralizar las credenciales. Configura contraseñas seguras aquí.
 
@@ -44,24 +49,19 @@ FLASK_ENV=production
 SECRET_KEY=e9c7821685b8fae92e21b0f51d8b9e4a
 
 # Credenciales Base de Datos
-DB_ROOT_PASSWORD=🔑SuperSecureRootPass2026!
-DB_USER=ricardo_admin
-DB_PASSWORD=🔑SecureUserPass2026!
+DB_ROOT_PASSWORD=Tu_contraseña
+DB_USER=tu_usuario
+DB_PASSWORD=tu_contraseña
 DB_NAME=seguridad_db
 ```
 
-2. .gitignore
-Evita subir por accidente las contraseñas al repositorio de GitHub.
+### 3. 🐳 Configuración de Contenedores e Infraestructura
 
-```text
-.env
-logs/*.log
-__pycache__/
+```bash
+cd laboratorio12
+nano Dockerfile
 ```
-
-3. 🐳 Configuración de Contenedores e Infraestructura
-
-Dockerfile
+Copiamos esto dentro del archivo
 
 ```text
 FROM python:3.10-slim
@@ -75,6 +75,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ .
 EXPOSE 5000
 CMD ["python", "app.py"]
+```
+
+Creamos la carpeta nginx y dentro de ella el archivo default.conf
+
+```bash
+cd laboratorio12
+mkdir nginx
+cd nginx
+nano default.conf
 ```
 
 nginx/default.conf
@@ -103,9 +112,13 @@ server {
     }
 }
 ```
+Ahora creamos el archivo "docker-compose.yml" El motor definitivo. Implementa persistencia por volúmenes nombrados para la BD, carpetas compartidas para desarrollo y logs de Flask, políticas de reinicio automático y el healthcheck estricto de MariaDB para garantizar estabilidad.
 
-docker-compose.yml
-El motor definitivo. Implementa persistencia por volúmenes nombrados para la BD, carpetas compartidas para desarrollo y logs de Flask, políticas de reinicio automático y el healthcheck estricto de MariaDB para garantizar estabilidad.
+```bash
+cd laboratorio12
+nano docker-compose.yml
+```
+Y dentro de ellos ponemos lo siguiente 
 
 ```text
 version: '3.8'
@@ -176,6 +189,7 @@ services:
     environment:
       - PMA_HOST=db_mariadb
       - PMA_ARBITRARY=0
+      - PMA_ABSOLUTE_URI=/phpmyadmin/
     depends_on:
       db_mariadb:
         condition: service_healthy
@@ -191,7 +205,15 @@ volumes:
 ```
 
 ## 💻 Código de la Aplicación (Flask Seguro)
-1. app/requirements.txt
+### 1. Creamos la carpeta app/ y dentro de ella el archivo requirements.txt
+
+```bash
+cd laboratorio12
+mkdir app
+cd app
+nano requirements.txt
+```
+Dentro copiamos lo siguiente
 
 ```text
 Flask==3.0.2
@@ -199,8 +221,14 @@ Werkzeug==3.0.1
 pymysql==1.1.0
 ```
 
-2. app/app.py
+### 2. Creamos la carpeta app/ y dentro de ella el archivo app.py
 Maneja conexiones limpias usando el healthcheck del orquestador. Captura excepciones de base de datos y escribe bitácoras en ./logs/app_secure.log.
+
+```bash
+cd laboratorio12/app
+nano app.py
+```
+Dentro copiamos lo siguiente 
 
 ```python
 import os
@@ -304,6 +332,98 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
 ```
 (Nota: Asegúrate de crear las interfaces HTML básicas dentro de app/templates/login.html y app/templates/register.html tal como se definieron previamente).
+
+### 3. Login.html y registre.html
+
+```bash
+cd laboratorio12/app
+mkdir templates
+cd templates
+nano login.html
+```
+
+Dentro copiamos lo siguiente 
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Seguro</title>
+    <link rel="stylesheet" href="[https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css](https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css)">
+</head>
+<body class="bg-light container py-5" style="max-width: 420px;">
+    <h3 class="text-center mb-4">Módulo de Autenticación</h3>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} text-center py-2">{{ message }}</div>
+            {% endfor %}
+         {% endif %}
+    {% endwith %}
+    <form method="POST" class="card p-4 shadow-sm">
+        <div class="mb-3">
+            <label class="form-label font-weight-bold">Identificador / Usuario:</label>
+            <input type="text" name="username" class="form-control" autocomplete="off" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Contraseña:</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-dark w-100">Iniciar Sesión</button>
+        <div class="mt-3 text-center">
+            <a href="/register" class="text-secondary small">Crear una cuenta nueva</a>
+        </div>
+    </form>
+</body>
+</html>
+
+```
+
+Despues creamos el register
+
+```bash
+cd laboratorio12/app/templates
+nano register.html
+```
+
+y copiamos dentro
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro del Sistema</title>
+    <link rel="stylesheet" href="[https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css](https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css)">
+</head>
+<body class="bg-light container py-5" style="max-width: 420px;">
+    <h3 class="text-center mb-4">Registro Altamente Seguro</h3>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} text-center py-2">{{ message }}</div>
+            {% endfor %}
+         {% endif %}
+    {% endwith %}
+    <form method="POST" class="card p-4 shadow-sm">
+        <div class="mb-3">
+            <label class="form-label">Definir Usuario:</label>
+            <input type="text" name="username" class="form-control" autocomplete="off" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Definir Contraseña:</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100">Dar de Alta Usuario</button>
+        <div class="mt-3 text-center">
+            <a href="/login" class="text-secondary small">Regresar al portal de acceso</a>
+        </div>
+    </form>
+</body>
+</html>
+```
+
 
 ## 🚀 5. Despliegue en Servidor VPS Paso a Paso (Debian 11)
 
