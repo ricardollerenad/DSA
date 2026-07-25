@@ -1,7 +1,7 @@
 # Laboratorio: Implementación de Protección CSRF en Flask utilizando Flask-WTF
 ## Objetivos
 ### Objetivo General
--
+---
 Implementar mecanismos de protección contra ataques **Cross-Site Request Forgery (CSRF)** en una aplicación desarrollada con **Flask**, utilizando la librería **Flask-WTF**, desplegando la solución mediante una arquitectura contenerizada con **Docker Compose**, **NGINX**, **Flask**, **MariaDB** y **phpMyAdmin**.
 ---
 ### Objetivos Específicos
