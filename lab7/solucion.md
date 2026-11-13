@@ -41,6 +41,9 @@ source venv/bin/activate
 
 # Instalar Flask (si no está instalado) y Bandit
 pip install flask bandit
+
+# Generar el archivo de librerías Instaladas 
+pip freeze > requirements.txt
 ```
 
 ### Paso N° 2: Verificar su instalación
